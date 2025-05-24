@@ -17,6 +17,15 @@ class requestHandler(httpServer.BaseHTTPRequestHandler):
     </html>
     '''
 
+    Error_Page = """\
+        <html>
+        <body>
+        <h1>Error accessing {path}</h1>
+        <p>{msg}</p>
+        </body>
+        </html>
+        """
+
     def do_GET(self):
         try:
             # Figure out what exactly is being requested.
@@ -37,6 +46,10 @@ class requestHandler(httpServer.BaseHTTPRequestHandler):
         # Handle errors.
         except Exception as error:
             self.send_error(404,str(error))
+
+    def handle_error(self, msg):
+        content = self.Error_Page.format(path=self.path, msg=msg)
+        self.send_content(content)
 
     def handle_file(self, full_path):
         try:
