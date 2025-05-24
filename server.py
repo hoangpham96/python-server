@@ -39,7 +39,13 @@ class requestHandler(httpServer.BaseHTTPRequestHandler):
             self.send_error(404,str(error))
 
     def handle_file(self, full_path):
-        pass
+        try:
+            with open(full_path, 'rb') as reader:
+                content = reader.read()
+            self.send_content(content)
+        except IOError as msg:
+            msg = "'{0}' cannot be read: {1}".format(self.path, msg)
+            self.handle_error(msg)
 
     def create_page(self):
         values = {
