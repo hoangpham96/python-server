@@ -1,4 +1,6 @@
 import http.server as httpServer
+import os
+
 class requestHandler(httpServer.BaseHTTPRequestHandler):
     Page = '''\
     <html>
@@ -16,8 +18,25 @@ class requestHandler(httpServer.BaseHTTPRequestHandler):
     '''
 
     def do_GET(self):
-        page = self.create_page()
-        self.send_page(page)
+        try:
+            # Figure out what exactly is being requested.
+            full_path = os.getcwd() + self.path
+
+            # It doesn't exist...
+            if not os.path.exists(full_path):
+                raise Exception(f"'{self.path}' not found")
+
+            # ...it's a file...
+            elif os.path.isfile(full_path):
+                self.handle_file(full_path)
+
+            # ...it's something we don't handle.
+            else:
+                raise Exception(f"Unknown object '{self.path}'")
+
+        # Handle errors.
+        except Exception as msg:
+            self.handle_error(msg)
 
     def create_page(self):
         values = {
