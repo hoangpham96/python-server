@@ -20,7 +20,6 @@ class case_existing_file(object):
     def act(self, handler):
         handler.handle_file(handler.full_path)
 
-
 class case_always_fail(object):
     '''Base case if nothing else worked.'''
 
@@ -89,17 +88,15 @@ class requestHandler(httpServer.BaseHTTPRequestHandler):
     def do_GET(self):
         try:
             # Figure out what exactly is being requested.
-            full_path = os.getcwd() + self.path
+            self.full_path = os.getcwd() + self.path
 
             # Figure out how to handle it.
             for case in self.Cases:
-                handler = case()
-                if handler.test(self):
-                    handler.act(self)
+                # handler = case()
+                if case.test(self):
+                    print(f"Handling {case.__class__.__name__}")
+                    case.act(self)
                     break
-            # ...it's something we don't handle.
-            else:
-                raise Exception(f"Unknown object '{self.path}'")
 
         # Handle errors.
         except Exception as error:
@@ -108,6 +105,7 @@ class requestHandler(httpServer.BaseHTTPRequestHandler):
     # Handle unknown objects.
     def handle_error(self, msg):
         content = self.Error_Page.format(path=self.path, msg=msg)
+        print(f"Error: {msg}")
         self.send_content(content, 404)
 
     # Send actual content.
@@ -116,7 +114,7 @@ class requestHandler(httpServer.BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/html")
         self.send_header("Content-Length", str(len(content)))
         self.end_headers()
-        self.wfile.write(content.encode('utf-8'))
+        self.wfile.write(content)
 
     def handle_file(self, full_path):
         try:
@@ -127,23 +125,23 @@ class requestHandler(httpServer.BaseHTTPRequestHandler):
             msg = "'{0}' cannot be read: {1}".format(self.path, msg)
             self.handle_error(msg)
 
-    def create_page(self):
-        values = {
-            'date_time'   : self.date_time_string(),
-            'client_host' : self.client_address[0],
-            'client_port' : self.client_address[1],
-            'command'     : self.command,
-            'path'        : self.path
-        }
-        page = self.Page.format(**values)
-        return page
+    # def create_page(self):
+    #     values = {
+    #         'date_time'   : self.date_time_string(),
+    #         'client_host' : self.client_address[0],
+    #         'client_port' : self.client_address[1],
+    #         'command'     : self.command,
+    #         'path'        : self.path
+    #     }
+    #     page = self.Page.format(**values)
+    #     return page
 
-    def send_page(self, page):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/html')
-        self.send_header('Content-Length', str(len(page)))
-        self.end_headers()
-        self.wfile.write(page.encode('utf-8'))
+    # def send_page(self, page):
+    #     self.send_response(200)
+    #     self.send_header('Content-type', 'text/html')
+    #     self.send_header('Content-Length', str(len(page)))
+    #     self.end_headers()
+    #     self.wfile.write(page.encode('utf-8'))
     
 #----------------------------------------------------------------------
 
