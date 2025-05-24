@@ -58,6 +58,16 @@ class Case_directory_no_index_file(Case):
     def act(self, handler):
         handler.list_dir(handler.full_path)
 
+class Case_cgi_file(Case):
+    '''Something runnable.'''
+
+    def test(self, handler):
+        return os.path.isfile(handler.full_path) and \
+               handler.full_path.endswith('.py')
+
+    def act(self, handler):
+        handler.run_cgi(handler.full_path)
+
 class requestHandler(httpServer.BaseHTTPRequestHandler):
     Page = '''\
     <html>
@@ -94,6 +104,7 @@ class requestHandler(httpServer.BaseHTTPRequestHandler):
         '''
     
     Cases = [Case_no_file(),
+             Case_cgi_file(),
              Case_existing_file(),
              Case_directory_index_file(),
              Case_directory_no_index_file(),
@@ -152,6 +163,14 @@ class requestHandler(httpServer.BaseHTTPRequestHandler):
         except OSError as msg:
             msg = "'{0}' cannot be listed: {1}".format(self.path, msg)
             self.handle_error(msg)
+
+    def run_cgi(self, full_path):
+        cmd = "python " + full_path
+        child_stdin, child_stdout = os.popen2(cmd)
+        child_stdin.close()
+        data = child_stdout.read()
+        child_stdout.close()
+        self.send_content(data)
 
     # def create_page(self):
     #     values = {
