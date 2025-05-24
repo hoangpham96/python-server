@@ -45,7 +45,7 @@ class requestHandler(httpServer.BaseHTTPRequestHandler):
 
         # Handle errors.
         except Exception as error:
-            self.handle_error(str(error))
+            self.handle_error(error)
 
     # Handle unknown objects.
     def handle_error(self, msg):
