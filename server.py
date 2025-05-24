@@ -35,8 +35,11 @@ class requestHandler(httpServer.BaseHTTPRequestHandler):
                 raise Exception(f"Unknown object '{self.path}'")
 
         # Handle errors.
-        except Exception as msg:
-            self.handle_error(msg)
+        except Exception as error:
+            self.send_error(404,str(error))
+
+    def handle_file(self, full_path):
+        pass
 
     def create_page(self):
         values = {
