@@ -1,7 +1,19 @@
 import http.server as httpServer
 import os
 
-class case_no_file(object):
+class Case(object):
+    '''Base class for all cases.'''
+
+    def index_path(self, handler):
+        return os.path.join(handler.full_path, 'index.html')
+
+    def test(self, handler):
+        return True
+
+    def act(self, handler):
+        pass
+
+class Case_no_file(Case):
     '''File or directory does not exist.'''
 
     def test(self, handler):
@@ -11,7 +23,7 @@ class case_no_file(object):
         raise Exception("'{0}' not found".format(handler.path))
 
 
-class case_existing_file(object):
+class Case_existing_file(Case):
     '''File exists.'''
 
     def test(self, handler):
@@ -20,20 +32,14 @@ class case_existing_file(object):
     def act(self, handler):
         handler.handle_file(handler.full_path)
 
-class case_always_fail(object):
+class Case_always_fail(Case):
     '''Base case if nothing else worked.'''
-
-    def test(self, handler):
-        return True
 
     def act(self, handler):
         raise Exception("Unknown object '{0}'".format(handler.path))
     
-class case_directory_index_file(object):
+class Case_directory_index_file(Case):
     '''Serve index.html page for a directory.'''
-
-    def index_path(self, handler):
-        return os.path.join(handler.full_path, 'index.html')
 
     def test(self, handler):
         return os.path.isdir(handler.full_path) and \
@@ -42,11 +48,8 @@ class case_directory_index_file(object):
     def act(self, handler):
         handler.handle_file(self.index_path(handler))
 
-class case_directory_no_index_file(object):
+class Case_directory_no_index_file(Case):
     '''Serve listing for a directory without an index.html page.'''
-
-    def index_path(self, handler):
-        return os.path.join(handler.full_path, 'index.html')
 
     def test(self, handler):
         return os.path.isdir(handler.full_path) and \
@@ -80,10 +83,10 @@ class requestHandler(httpServer.BaseHTTPRequestHandler):
         </html>
         """
     
-    Cases = [case_no_file(),
-             case_existing_file(),
-             case_directory_index_file(),
-             case_always_fail()]
+    Cases = [Case_no_file(),
+             Case_existing_file(),
+             Case_directory_index_file(),
+             Case_always_fail()]
 
     def do_GET(self):
         try:
@@ -110,6 +113,9 @@ class requestHandler(httpServer.BaseHTTPRequestHandler):
 
     # Send actual content.
     def send_content(self, content, status=200):
+        if isinstance(content, str):
+            content = content.encode('utf-8')
+            
         self.send_response(status)
         self.send_header("Content-type", "text/html")
         self.send_header("Content-Length", str(len(content)))
