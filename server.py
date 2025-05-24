@@ -47,9 +47,18 @@ class requestHandler(httpServer.BaseHTTPRequestHandler):
         except Exception as error:
             self.send_error(404,str(error))
 
+    # Handle unknown objects.
     def handle_error(self, msg):
         content = self.Error_Page.format(path=self.path, msg=msg)
-        self.send_content(content)
+        self.send_content(content, 404)
+
+    # Send actual content.
+    def send_content(self, content, status=200):
+        self.send_response(status)
+        self.send_header("Content-type", "text/html")
+        self.send_header("Content-Length", str(len(content)))
+        self.end_headers()
+        self.wfile.write(content)
 
     def handle_file(self, full_path):
         try:
